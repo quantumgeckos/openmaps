@@ -24,7 +24,19 @@
             <div class="col">
                 <div class="map" id="map"></div>
             </div>
-            <div class="col">Right Column</div>
+
+            <div class="col">
+                <div class="input-group mb-3">
+                    <input type="text" id="search-input" class="form-control" placeholder="Search Location">
+                    <div class="input-group-append" style="border-radius: 0;">
+                        <input name="" onclick="SearchLocation()" class="btn btn-primary" type="button"
+                            value="Search" />
+                    </div>
+                </div>
+                <div id="result" style="padding: 10px;">
+
+                </div>
+            </div>
         </div>
     </main>
     <footer>
@@ -54,7 +66,7 @@
         }
 
         const dest = {
-            lat: -6.299451985856301, 
+            lat: -6.299451985856301,
             lng: 107.15323289675455
         }
         const zoom = 15;
@@ -66,16 +78,68 @@
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             });
 
-            MapRouting(map, {
-                waypoints: [
-                    L.latLng(loc.lat, loc.lng),
-                    L.latLng(dest.lat, dest.lng)
-                ],
-                routeWhileDragging: true,
-                fitSelectedRoutes: true
-                
-            });
+            // MapRouting(map, {
+            //     waypoints: [
+            //         L.latLng(loc.lat, loc.lng),
+            //         L.latLng(dest.lat, dest.lng)
+            //     ],
+            //     routeWhileDragging: true,
+            //     fitSelectedRoutes: true
+            // });
         });
+
+
+        const sv = $('#search-input')
+        sv.keydown(function (e) {
+            setTimeout(() => {
+                if (e.key === "Enter") {
+                    SearchLocation();
+                }
+
+            }, 1000);
+
+        });
+
+        let debounceTimeout = null;
+        sv.on('input', function (e) {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                const query = sv.val();
+
+                if (query.length > 2) {
+                    SearchLocation(query);
+                }
+            }, 1000); // 500ms debounce
+        });
+
+        /* Hit Nominatim API */
+        const SearchLocation = async () => {
+            const el_res = $('#result');
+
+            const sv = $('#search-input').val();
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(sv)}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'FATools/1.0 (galang.izqd@gmail.com)'
+                }
+            });
+
+            const data = await response.json();
+            let result = ``;
+            if (data.length > 0) {
+                data.forEach(x => {
+                    result += `
+                        <div>
+                            ${x.display_name}
+                        </div>
+                    `;
+                    el_res.html(result);
+                });
+            } else {
+                el_res.html('No Result');
+            }
+        }
     </script>
 </body>
 
