@@ -21,18 +21,19 @@
     </header>
     <main>
         <div class="row ">
-            <div class="col">
+            <div class="col-md-6">
                 <div class="map" id="map"></div>
                 <div id="latlng">
                     <ul>
-                        <li>latitude: <span id="lat"></span></li>
-                        <li>longitude: <span id="lng"></span></li>
-                        <li>Geocode Result: <span id="geores"></span></li>
+                        <li><b>latitude:</b> <span id="lat"></span></li>
+                        <li><b>longitude:</b> <span id="lng"></span></li>
+                        <li><b>Display Name:</b> <span id="dispname"></span></li>
+                        <li><b>Geocode Result:</b> <span id="geores"></span></li>
                     </ul>
                 </div>
             </div>
 
-            <div class="col">
+            <div class="col-md-6">
                 <div class="input-group mb-3">
                     <input type="text" id="search-input" class="form-control" placeholder="Search Location">
                     <div class="input-group-append" style="border-radius: 0;">
@@ -86,16 +87,31 @@
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             });
 
+            map.on("click", function (e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                marker.setLatLng([lat, lng]);
+                ReverseGeocode(lat, lng).then((res) => {
+                    $('#lat').html(lat);
+                    $('#lng').html(lng);
+                    $('#dispname').html(res.display_name);
+                    $('#geores').html(JSON.stringify(res));
+                });
+
+            })
+
             marker = initMarker(loc.lat, loc.lng, map);
 
             marker.on('dragend', async function (e) {
                 const p = e.target.getLatLng();
-                
+
                 ReverseGeocode(p.lat, p.lng).then((res) => {
                     $('#lat').html(p.lat);
                     $('#lng').html(p.lng);
+                    $('#dispname').html(res.display_name);
                     $('#geores').html(JSON.stringify(res));
-                })
+                });
             });
 
 
@@ -164,8 +180,13 @@
                     map.setView([lat, lng], zoom);
                     marker.setLatLng([lat, lng]);
 
-                    $('#lat').html(lat);
-                    $('#lng').html(lng);
+
+                    ReverseGeocode(lat, lng).then((res) => {
+                        $('#lat').html(lat);
+                        $('#lng').html(lng);
+                        $('#dispname').html(res.display_name);
+                        $('#geores').html(JSON.stringify(res));
+                    });
                 });
             } else {
                 el_res.html('No Result');
