@@ -23,6 +23,13 @@
         <div class="row ">
             <div class="col">
                 <div class="map" id="map"></div>
+                <div id="latlng">
+                    <ul>
+                        <li>latitude: <span id="lat"></span></li>
+                        <li>longitude: <span id="lng"></span></li>
+                        <li>Geocode Result: <span id="geores"></span></li>
+                    </ul>
+                </div>
             </div>
 
             <div class="col">
@@ -34,7 +41,6 @@
                     </div>
                 </div>
                 <div id="result" style="padding: 10px;">
-
                 </div>
             </div>
         </div>
@@ -70,13 +76,28 @@
             lng: 107.15323289675455
         }
         const zoom = 15;
+        let map;
+        let marker;
 
 
         $(document).ready(function () {
-            const map = initMap('map', loc, {
+            map = initMap('map', loc, {
                 maxZoom: zoom,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             });
+
+            marker = initMarker(loc.lat, loc.lng, map);
+
+            marker.on('dragend', async function (e) {
+                const p = e.target.getLatLng();
+                
+                ReverseGeocode(p.lat, p.lng).then((res) => {
+                    $('#lat').html(p.lat);
+                    $('#lng').html(p.lng);
+                    $('#geores').html(JSON.stringify(res));
+                })
+            });
+
 
             // MapRouting(map, {
             //     waypoints: [
@@ -95,9 +116,7 @@
                 if (e.key === "Enter") {
                     SearchLocation();
                 }
-
             }, 1000);
-
         });
 
         let debounceTimeout = null;
@@ -105,7 +124,6 @@
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => {
                 const query = sv.val();
-
                 if (query.length > 2) {
                     SearchLocation(query);
                 }
@@ -126,15 +144,28 @@
             });
 
             const data = await response.json();
+
             let result = ``;
             if (data.length > 0) {
                 data.forEach(x => {
                     result += `
-                        <div>
+                        <div class="card-hover selector" data-id="${x.place_id}"" data-lat="${x.lat}" data-lng="${x.lon}">
                             ${x.display_name}
                         </div>
                     `;
-                    el_res.html(result);
+                });
+                el_res.html(result);
+
+                $(".selector").on("click", function () {
+                    const id = $(this).data('id')
+                    const lat = $(this).data('lat')
+                    const lng = $(this).data('lng')
+
+                    map.setView([lat, lng], zoom);
+                    marker.setLatLng([lat, lng]);
+
+                    $('#lat').html(lat);
+                    $('#lng').html(lng);
                 });
             } else {
                 el_res.html('No Result');

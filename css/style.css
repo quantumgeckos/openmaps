@@ -1,17 +1,31 @@
-.map{
-    width: 100%;
-    height: 500px;
-    /* margin: 10px; */
+.map {
+	width: 100%;
+	height: 500px;
+	/* margin: 10px; */
 }
 
-.leaflet-routing-container{
-    display: block;
+.leaflet-routing-container {
+	display: block;
 }
 
 body {
-    margin: 10px;
+	margin: 10px;
 }
 
 .col {
+	padding: 10px;
+}
+
+.card-hover {
+	/* Add shadows to create the "card" effect */
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+	transition: 0.3s;
     padding: 10px;
+    border-radius: 3px;
+    margin: auto;
+}
+
+.card-hover:hover {
+	box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    cursor: default;
 }
