@@ -4,8 +4,8 @@ const initMap = (el_id, c, opt) => {
     return map;
 }
 
-const initMarker = (lat, lng, map) => {
-    return L.marker([lat, lng], { draggable: true }).addTo(map)
+const initMarker = (loc, map) => {
+    return L.marker([loc.lat, loc.lng], { draggable: true }).addTo(map)
 }
 
 const ReverseGeocode = async (lat, lon) => {
@@ -17,4 +17,27 @@ const ReverseGeocode = async (lat, lon) => {
     });
     const data = await response.json();
     return data;
+}
+
+function initRouting(map) {
+  return L.Routing.control({
+    router: L.Routing.mapbox('pk.eyJ1IjoicXVhbnR1bWdlY2tvIiwiYSI6ImNtYnE1MjcwMDAwMzMybW9zMmZkM3JzbTUifQ.G5Ws0tOJ7-aJhyvvKSAucA'),
+    waypoints: [],
+    routeWhileDragging: true
+  }).addTo(map);
+}
+
+function setWaypoints(startLatLng, endLatLng) {
+  if (routingControl) {  
+    routingControl.setWaypoints([
+      L.latLng(startLatLng.lat, startLatLng.lng),
+      L.latLng(endLatLng.lat, endLatLng.lng)
+    ]);
+  }
+}
+
+function clearWaypoints() {
+  if (routingControl) {
+    routingControl.setWaypoints([]);
+  }
 }
