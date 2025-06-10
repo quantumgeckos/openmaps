@@ -21,7 +21,7 @@ const ReverseGeocode = async (lat, lon) => {
 
 function initRouting(map) {
   return L.Routing.control({
-    router: L.Routing.mapbox('pk.eyJ1IjoicXVhbnR1bWdlY2tvIiwiYSI6ImNtYnE1MjcwMDAwMzMybW9zMmZkM3JzbTUifQ.G5Ws0tOJ7-aJhyvvKSAucA'),
+    router: L.Routing.mapbox('KEY GOES HERE'),
     waypoints: [],
     routeWhileDragging: true
   }).addTo(map);
