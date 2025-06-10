@@ -13,6 +13,7 @@
     <link rel="stylesheet" rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./js/leaflet-1.9.4/leaflet.css">
     <link rel="stylesheet" href="./js/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.css">
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap"></script>
 </head>
 
 <body>
@@ -79,50 +80,70 @@
         const zoom = 15;
         let map;
         let marker;
+        let routingControl = null; // Initialize routingControl
+        let waypoints = []; // Initialize waypoints array
 
 
         $(document).ready(function () {
-            map = initMap('map', loc, {
+            // Initialize the map using the global initMap function
+            map = window.initMap('map', loc, {
                 maxZoom: zoom,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            });
+
+            // Initial MapRouting call without hardcoded waypoints
+            routingControl = MapRouting(map, {
+                // waypoints: [], // Start with no waypoints or remove this line
+                routeWhileDragging: true,
+                fitSelectedRoutes: true
             });
 
             map.on("click", function (e) {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
 
-                marker.setLatLng([lat, lng]);
+                if (waypoints.length < 2) {
+                    waypoints.push(L.latLng(lat, lng));
+                    L.marker([lat, lng]).addTo(map).bindPopup(waypoints.length === 1 ? 'Start' : 'End').openPopup();
+                }
+
+                if (waypoints.length === 2) {
+                    if (routingControl) {
+                        routingControl.setWaypoints(waypoints);
+                    } else {
+                        routingControl = MapRouting(map, {
+                            waypoints: waypoints,
+                            routeWhileDragging: true,
+                            fitSelectedRoutes: true
+                        });
+                    }
+                    // Consider clearing waypoints for a new route:
+                    // waypoints = [];
+                    // Or allow modifying by removing this line and letting users click again
+                }
+
+                // Keep reverse geocoding for the clicked point
                 ReverseGeocode(lat, lng).then((res) => {
                     $('#lat').html(lat);
                     $('#lng').html(lng);
                     $('#dispname').html(res.display_name);
-                    $('#geores').html(JSON.stringify(res));
+                    // $('#geores').html(JSON.stringify(res)); // Simplified output
                 });
+            });
 
-            })
-
+            // Remove the old single marker logic if not needed, or adapt it.
+            // For now, we'll keep the main marker for other potential uses,
+            // but routing waypoints will have their own markers.
             marker = initMarker(loc.lat, loc.lng, map);
-
             marker.on('dragend', async function (e) {
                 const p = e.target.getLatLng();
-
                 ReverseGeocode(p.lat, p.lng).then((res) => {
                     $('#lat').html(p.lat);
                     $('#lng').html(p.lng);
                     $('#dispname').html(res.display_name);
-                    $('#geores').html(JSON.stringify(res));
+                    // $('#geores').html(JSON.stringify(res));
                 });
             });
-
-
-            // MapRouting(map, {
-            //     waypoints: [
-            //         L.latLng(loc.lat, loc.lng),
-            //         L.latLng(dest.lat, dest.lng)
-            //     ],
-            //     routeWhileDragging: true,
-            //     fitSelectedRoutes: true
-            // });
         });
 
 
@@ -173,19 +194,33 @@
                 el_res.html(result);
 
                 $(".selector").on("click", function () {
-                    const id = $(this).data('id')
-                    const lat = $(this).data('lat')
-                    const lng = $(this).data('lng')
+                    const lat = $(this).data('lat');
+                    const lng = $(this).data('lng');
 
-                    map.setView([lat, lng], zoom);
-                    marker.setLatLng([lat, lng]);
+                    if (waypoints.length < 2) {
+                        waypoints.push(L.latLng(lat, lng));
+                        L.marker([lat, lng]).addTo(map).bindPopup(waypoints.length === 1 ? 'Start' : 'End').openPopup();
+                        map.setView([lat, lng], zoom);
+                    }
 
-
+                    if (waypoints.length === 2) {
+                        if (routingControl) {
+                            routingControl.setWaypoints(waypoints);
+                        } else {
+                            routingControl = MapRouting(map, {
+                                waypoints: waypoints,
+                                routeWhileDragging: true,
+                                fitSelectedRoutes: true
+                            });
+                        }
+                        // Optionally clear waypoints: waypoints = [];
+                    }
+                    // Reverse geocode for the selected location
                     ReverseGeocode(lat, lng).then((res) => {
                         $('#lat').html(lat);
                         $('#lng').html(lng);
                         $('#dispname').html(res.display_name);
-                        $('#geores').html(JSON.stringify(res));
+                        // $('#geores').html(JSON.stringify(res));
                     });
                 });
             } else {
